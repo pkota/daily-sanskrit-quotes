@@ -95,7 +95,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppScaffold(fromNotification = fromNotification)
+                    AppScaffold(
+                        fromNotification = fromNotification,
+                        settingsViewModel = settingsViewModel
+                    )
                 }
             }
         }
@@ -103,7 +106,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppScaffold(fromNotification: Boolean = false) {
+fun AppScaffold(
+    fromNotification: Boolean = false,
+    settingsViewModel: SettingsViewModel? = null
+) {
     val navController = rememberNavController()
 
     // Handle notification deep link — navigate to daily quote
@@ -154,7 +160,13 @@ fun AppScaffold(fromNotification: Boolean = false) {
             composable(Screen.DailyQuote.route) { DailyQuoteScreen() }
             composable(Screen.Favorites.route) { FavoritesScreen() }
             composable(Screen.Search.route) { SearchScreen() }
-            composable(Screen.Settings.route) { SettingsScreen() }
+            composable(Screen.Settings.route) {
+                if (settingsViewModel != null) {
+                    SettingsScreen(viewModel = settingsViewModel)
+                } else {
+                    SettingsScreen()
+                }
+            }
         }
     }
 }

@@ -4,10 +4,12 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.dailysanskritquotes.data.BundledQuoteImporter
 import com.dailysanskritquotes.data.QuoteRepository
+import com.dailysanskritquotes.data.db.CustomTagDao
 import com.dailysanskritquotes.data.db.QuoteDao
 import com.dailysanskritquotes.data.db.QuoteDatabase
 import com.dailysanskritquotes.data.db.ShownQuoteDao
 import com.dailysanskritquotes.data.sync.QuoteUpdater
+import com.dailysanskritquotes.domain.CustomTagManager
 import com.dailysanskritquotes.domain.DailyQuoteSelector
 import com.dailysanskritquotes.domain.FavoritesManager
 import com.dailysanskritquotes.domain.QuoteNotificationManager
@@ -48,6 +50,11 @@ object AppModule {
     }
 
     @Provides
+    fun provideCustomTagDao(database: QuoteDatabase): CustomTagDao {
+        return database.customTagDao()
+    }
+
+    @Provides
     @Singleton
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
         return context.getSharedPreferences("quote_prefs", Context.MODE_PRIVATE)
@@ -76,8 +83,14 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideSearchEngine(quoteDao: QuoteDao): SearchEngine {
-        return SearchEngine(quoteDao)
+    fun provideSearchEngine(quoteDao: QuoteDao, customTagDao: CustomTagDao): SearchEngine {
+        return SearchEngine(quoteDao, customTagDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCustomTagManager(customTagDao: CustomTagDao): CustomTagManager {
+        return CustomTagManager(customTagDao)
     }
 
     @Provides

@@ -32,6 +32,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.Typography
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -46,8 +47,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dailysanskritquotes.ui.viewmodel.AppColorTheme
 import com.dailysanskritquotes.ui.viewmodel.SettingsViewModel
@@ -70,8 +73,7 @@ fun SettingsScreen(
     ) {
         Text(
             text = "Settings",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
+            style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onBackground
         )
 
@@ -101,18 +103,18 @@ fun SettingsScreen(
                     Column {
                         Text(
                             text = "Notification Time",
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = TextStyle(fontSize = 16.sp),
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = formatTime(state.notificationHour, state.notificationMinute),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = TextStyle(fontSize = 14.sp),
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
                     Text(
                         text = "Change",
-                        style = MaterialTheme.typography.labelLarge,
+                        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium),
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -135,7 +137,7 @@ fun SettingsScreen(
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = "Color Theme",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = TextStyle(fontSize = 16.sp),
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -158,12 +160,12 @@ fun SettingsScreen(
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = "Text Size",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = TextStyle(fontSize = 16.sp),
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = state.textSize.label,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = TextStyle(fontSize = 14.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -185,12 +187,12 @@ fun SettingsScreen(
                 ) {
                     Text(
                         text = "A",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = TextStyle(fontSize = 12.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = "A",
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = TextStyle(fontSize = 22.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -231,8 +233,7 @@ fun SettingsScreen(
 private fun SettingsSectionHeader(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.SemiBold,
+        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(start = 4.dp, top = 8.dp)
     )
@@ -278,12 +279,12 @@ private fun SettingsToggleRow(
             Column {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = TextStyle(fontSize = 16.sp),
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = TextStyle(fontSize = 14.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -346,28 +347,31 @@ private fun TimePickerDialog(
         is24Hour = false
     )
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Set Notification Time") },
-        text = {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                TimePicker(state = timePickerState)
+    // Use unscaled typography so the dialog doesn't grow with the text size setting
+    MaterialTheme(typography = Typography()) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Set Notification Time") },
+            text = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    TimePicker(state = timePickerState)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { onConfirm(timePickerState.hour, timePickerState.minute) }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text("Cancel")
+                }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(timePickerState.hour, timePickerState.minute) }) {
-                Text("OK")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
+        )
+    }
 }
 
 private fun formatTime(hour: Int, minute: Int): String {

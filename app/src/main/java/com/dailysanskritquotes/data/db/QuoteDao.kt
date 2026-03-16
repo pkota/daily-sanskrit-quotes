@@ -27,7 +27,13 @@ interface QuoteDao {
     @Query("SELECT * FROM quotes WHERE id NOT IN (SELECT quoteId FROM shown_quotes)")
     suspend fun getUnshownQuotes(): List<QuoteEntity>
 
-    @Query("SELECT * FROM quotes WHERE englishTranslation LIKE '%' || :query || '%' OR sanskritText LIKE '%' || :query || '%'")
+    @Query("""
+        SELECT * FROM quotes 
+        WHERE englishTranslation LIKE '%' || :query || '%' 
+           OR sanskritText LIKE '%' || :query || '%'
+           OR attribution LIKE '%' || :query || '%'
+           OR tags LIKE '%' || :query || '%'
+    """)
     fun searchQuotes(query: String): Flow<List<QuoteEntity>>
 
     @Query("DELETE FROM quotes WHERE id = :id")

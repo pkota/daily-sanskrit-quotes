@@ -8,8 +8,13 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.Typography
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import com.dailysanskritquotes.R
 import com.dailysanskritquotes.ui.viewmodel.AppColorTheme
 import com.dailysanskritquotes.ui.viewmodel.TextSizeOption
 
@@ -123,6 +128,32 @@ private val ForestDarkColorScheme = darkColorScheme(
     onSurfaceVariant = Color(0xFFC1C9BF)
 )
 
+val VesperLibre = FontFamily(
+    Font(R.font.vesper_libre_regular, FontWeight.Normal),
+    Font(R.font.vesper_libre_bold, FontWeight.Bold)
+)
+
+fun scaledTypography(scale: Float): Typography {
+    val base = Typography()
+    return Typography(
+        displayLarge = base.displayLarge.copy(fontFamily = VesperLibre, fontSize = base.displayLarge.fontSize * scale),
+        displayMedium = base.displayMedium.copy(fontFamily = VesperLibre, fontSize = base.displayMedium.fontSize * scale),
+        displaySmall = base.displaySmall.copy(fontFamily = VesperLibre, fontSize = base.displaySmall.fontSize * scale),
+        headlineLarge = base.headlineLarge.copy(fontFamily = VesperLibre, fontSize = base.headlineLarge.fontSize * scale),
+        headlineMedium = base.headlineMedium.copy(fontFamily = VesperLibre, fontSize = base.headlineMedium.fontSize * scale),
+        headlineSmall = base.headlineSmall.copy(fontFamily = VesperLibre, fontSize = base.headlineSmall.fontSize * scale),
+        titleLarge = base.titleLarge.copy(fontFamily = VesperLibre, fontSize = base.titleLarge.fontSize * scale),
+        titleMedium = base.titleMedium.copy(fontFamily = VesperLibre, fontSize = base.titleMedium.fontSize * scale),
+        titleSmall = base.titleSmall.copy(fontFamily = VesperLibre, fontSize = base.titleSmall.fontSize * scale),
+        bodyLarge = base.bodyLarge.copy(fontFamily = VesperLibre, fontSize = base.bodyLarge.fontSize * scale),
+        bodyMedium = base.bodyMedium.copy(fontFamily = VesperLibre, fontSize = base.bodyMedium.fontSize * scale),
+        bodySmall = base.bodySmall.copy(fontFamily = VesperLibre, fontSize = base.bodySmall.fontSize * scale),
+        labelLarge = base.labelLarge.copy(fontFamily = VesperLibre, fontSize = base.labelLarge.fontSize * scale),
+        labelMedium = base.labelMedium.copy(fontFamily = VesperLibre, fontSize = base.labelMedium.fontSize * scale),
+        labelSmall = base.labelSmall.copy(fontFamily = VesperLibre, fontSize = base.labelSmall.fontSize * scale),
+    )
+}
+
 @Composable
 fun DailySanskritQuotesTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -144,8 +175,11 @@ fun DailySanskritQuotesTheme(
         AppColorTheme.FOREST -> if (darkTheme) ForestDarkColorScheme else ForestLightColorScheme
     }
 
+    val typography = scaledTypography(textSizeOption.scale)
+
     MaterialTheme(
         colorScheme = colorScheme,
+        typography = typography,
         content = content
     )
 }

@@ -25,8 +25,22 @@ class QuoteNotificationManager(
     }
 
     /**
+     * Checks if the app can schedule exact alarms (required on Android 12+).
+     */
+    fun canScheduleExactAlarms(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            alarmManager.canScheduleExactAlarms()
+        } else {
+            true
+        }
+    }
+
+    /**
      * Schedules a daily notification at the given hour and minute in the user's local time zone.
      * Defaults to 8:00 AM.
+     * 
+     * Uses setAlarmClock() for maximum reliability — this is treated as a user-visible alarm
+     * by the system and is not subject to Doze/battery optimization delays.
      */
     fun scheduleDailyNotification(hour: Int = DEFAULT_HOUR, minute: Int = DEFAULT_MINUTE) {
         val clampedHour = hour.coerceIn(0, 23)
@@ -46,11 +60,16 @@ class QuoteNotificationManager(
 
         val pendingIntent = createAlarmPendingIntent()
 
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            calendar.timeInMillis,
-            pendingIntent
+        // setAlarmClock is the most reliable for user-visible alarms.
+        // It's exempt from Doze mode and battery optimizations.
+        val showIntent = PendingIntent.getActivity(
+            context,
+            0,
+            Intent(context, com.dailysanskritquotes.MainActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val alarmClockInfo = AlarmManager.AlarmClockInfo(calendar.timeInMillis, showIntent)
+        alarmManager.setAlarmClock(alarmClockInfo, pendingIntent)
     }
 
     /**

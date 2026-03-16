@@ -224,21 +224,21 @@ Incremental implementation of a Kotlin + Jetpack Compose Android app following M
     - Steps to upload App Bundle and submit for review
     - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-- [ ] 17. GitHub version control setup
-  - [-] 17.1 Initialize Git repository and create `.gitignore`
+- [x] 17. GitHub version control setup
+  - [x] 17.1 Initialize Git repository and create `.gitignore`
     - Initialize local Git repo
     - Create `.gitignore` for Android/Kotlin (exclude `build/`, `.gradle/`, `.idea/`, `local.properties`, `*.apk`, `*.aab`, keystore files)
     - Make initial commit with all project files
-  - [ ] 17.2 Create GitHub repository and push code
+  - [x] 17.2 Create GitHub repository and push code
     - Create a new repository on GitHub (via `gh` CLI or manually)
     - Add GitHub remote and push initial commit to `main` branch
     - Set up branch protection rules (optional: require PR reviews for `main`)
-  - [ ] 17.3 Create a `README.md` for the GitHub repository
+  - [x] 17.3 Create a `README.md` for the GitHub repository
     - App description, features overview, screenshots placeholder
     - Build instructions (reference the macOS dev setup guide from task 16.1)
     - Link to Play Store listing (placeholder)
 
-- [ ] 18. Final checkpoint - Ensure all tests pass and app is complete
+- [x] 18. Final checkpoint - Ensure all tests pass and app is complete
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

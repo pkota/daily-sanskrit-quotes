@@ -7,6 +7,7 @@ import com.dailysanskritquotes.data.db.QuoteEntity
 import com.dailysanskritquotes.data.db.ShownQuoteEntity
 import com.dailysanskritquotes.data.model.QuoteDelta
 import com.dailysanskritquotes.data.model.QuoteDto
+import com.dailysanskritquotes.data.model.toEntity
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -62,14 +63,7 @@ class QuoteRepository(
                 when (change.action) {
                     "add" -> {
                         val dto = change.quote ?: continue
-                        quoteDao.insert(
-                            QuoteEntity(
-                                id = dto.id,
-                                sanskritText = dto.sanskritText,
-                                englishTranslation = dto.englishTranslation,
-                                attribution = dto.attribution
-                            )
-                        )
+                        quoteDao.insert(dto.toEntity())
                     }
                     "update" -> {
                         val dto = change.quote ?: continue
@@ -103,11 +97,7 @@ class QuoteRepository(
             // Insert all quotes fresh (REPLACE strategy)
             val entities = quotes.map { dto ->
                 val favoritedAt = favorites[dto.id]
-                QuoteEntity(
-                    id = dto.id,
-                    sanskritText = dto.sanskritText,
-                    englishTranslation = dto.englishTranslation,
-                    attribution = dto.attribution,
+                dto.toEntity(
                     isFavorite = favorites.containsKey(dto.id),
                     favoritedAt = favoritedAt
                 )

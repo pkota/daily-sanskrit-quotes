@@ -48,9 +48,12 @@ class QuoteAlarmReceiver : BroadcastReceiver() {
                 if (quote != null) {
                     postNotification(context, quote.sanskritText, quote.englishTranslation)
                 }
-                // Reschedule for the next day
+                // Reschedule for the next day using the user's saved time preference
+                val prefs = context.getSharedPreferences("quote_prefs", Context.MODE_PRIVATE)
+                val savedHour = prefs.getInt("notification_hour", QuoteNotificationManager.DEFAULT_HOUR)
+                val savedMinute = prefs.getInt("notification_minute", QuoteNotificationManager.DEFAULT_MINUTE)
                 val manager = QuoteNotificationManager(context)
-                manager.scheduleDailyNotification()
+                manager.scheduleDailyNotification(savedHour, savedMinute)
             } finally {
                 pendingResult.finish()
             }

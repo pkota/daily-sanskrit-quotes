@@ -2,7 +2,7 @@ package com.dailysanskritquotes.data
 
 import android.content.Context
 import com.dailysanskritquotes.data.db.QuoteDao
-import com.dailysanskritquotes.data.db.QuoteEntity
+import com.dailysanskritquotes.data.model.toEntity
 import com.dailysanskritquotes.data.parser.QuoteFileParser
 
 /**
@@ -28,14 +28,7 @@ class BundledQuoteImporter(
 
         val quoteFile = QuoteFileParser.parseQuoteFile(json).getOrElse { return 0 }
 
-        val entities = quoteFile.quotes.map { dto ->
-            QuoteEntity(
-                id = dto.id,
-                sanskritText = dto.sanskritText,
-                englishTranslation = dto.englishTranslation,
-                attribution = dto.attribution
-            )
-        }
+        val entities = quoteFile.quotes.map { dto -> dto.toEntity() }
 
         quoteDao.insertAll(entities)
         return entities.size

@@ -10,5 +10,7 @@ data class QuoteEntity(
     val englishTranslation: String,
     val attribution: String,
     val isFavorite: Boolean = false,
-    val favoritedAt: Long? = null
+    val favoritedAt: Long? = null,
+    val transliteration: String = "",
+    val tags: String = "[]"
 )
