@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "quotes": [
+    {
+      "id": "q001",
+      "sanskritText": "धर्मो रक्षति रक्षितः",
+      "englishTranslation": "Dharma protects those who protect it.",
+      "attribution": "Manusmriti"
+    },
+    {
+      "id": "q002",
+      "sanskritText": "सत्यमेव जयते",
+      "englishTranslation": "Truth alone triumphs.",
+      "attribution": "Mundaka Upanishad"
+    },
+    {
+      "id": "q003",
+      "sanskritText": "अहिंसा परमो धर्मः",
+      "englishTranslation": "Non-violence is the highest duty.",
+      "attribution": "Mahabharata"
+    },
+    {
+      "id": "q004",
+      "sanskritText": "विद्या ददाति विनयम्",
+      "englishTranslation": "Knowledge gives humility.",
+      "attribution": "Hitopadesha"
+    },
+    {
+      "id": "q005",
+      "sanskritText": "योगः कर्मसु कौशलम्",
+      "englishTranslation": "Yoga is skill in action.",
+      "attribution": "Bhagavad Gita"
+    }
+  ]
+}
