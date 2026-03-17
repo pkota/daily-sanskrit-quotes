@@ -47,3 +47,7 @@ captures/
 
 # Google Services (if used)
 google-services.json
+
+# Extractor data (Blogger Takeout files and generated output)
+extractor/data/
+extractor/output/

@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "DailySanskritQuotes"
 include(":app")
+include(":extractor")

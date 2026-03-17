@@ -41,7 +41,7 @@ Daily Sanskrit Quotes is an Android application that presents users with one ins
 1. THE App SHALL ship with a bundled Quote_File containing the initial collection of Quotes.
 2. WHEN the App is launched for the first time, THE App SHALL import all Quotes from the bundled Quote_File into the local Quote_Database.
 3. THE Quote_Database SHALL store each Quote with its Sanskrit text, English translation, attribution, unique identifier, and favorite status.
-4. THE Quote_Database SHALL support a minimum of 1000 Quotes.
+4. THE Quote_Database SHALL support a minimum of 5000 Quotes.
 
 ### Requirement 3: Favorite Quotes
 
@@ -136,3 +136,20 @@ Daily Sanskrit Quotes is an Android application that presents users with one ins
 2. THE App documentation SHALL describe the steps to create a Google Play Developer account.
 3. THE App documentation SHALL describe the steps to create a store listing including app title, description, screenshots, and privacy policy.
 4. THE App documentation SHALL describe the steps to upload the App Bundle and submit the app for review.
+
+### Requirement 11: Settings and Personalization
+
+**User Story:** As a User, I want a simple settings page where I can personalize the app's appearance, so that I can make it comfortable and enjoyable to use without needing technical knowledge.
+
+#### Acceptance Criteria
+
+1. WHEN the User navigates to the settings screen, THE App SHALL display all personalization options using plain-language labels (for example, "Make text bigger or smaller" instead of "Font size").
+2. THE App SHALL provide a "Light or Dark look" toggle that switches the App between a light color theme and a dark color theme.
+3. THE App SHALL provide a "Color theme" selector that allows the User to choose from a predefined set of color schemes for the App interface.
+4. THE App SHALL provide a "Text size" slider labeled "Make text bigger or smaller" that adjusts the display size of Quote text across all screens.
+5. THE App SHALL provide a "Screen orientation" toggle labeled "Lock screen direction" that allows the User to lock the display to portrait mode, landscape mode, or follow device rotation.
+6. WHEN the User changes any setting on the settings screen, THE App SHALL apply the change immediately and display a live preview of the effect without requiring the User to save or restart the App.
+7. THE App SHALL persist all User-selected settings in the Quote_Database so that settings are retained across App restarts.
+8. WHEN the App is launched for the first time, THE App SHALL apply default settings: light theme, the first color scheme in the predefined set, medium text size, and device-rotation screen orientation.
+9. IF the App fails to load persisted settings on launch, THEN THE App SHALL apply the default settings and display a brief message informing the User that settings have been reset.
+10. THE App SHALL ensure all settings controls meet Android accessibility guidelines, including sufficient touch-target sizes and screen-reader-compatible labels.
