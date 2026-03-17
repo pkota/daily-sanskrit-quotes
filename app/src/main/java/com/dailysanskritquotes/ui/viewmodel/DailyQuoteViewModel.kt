@@ -54,16 +54,32 @@ class DailyQuoteViewModel @Inject constructor(
     val allTagNames: StateFlow<List<String>> = customTagManager.getAllTagNames()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    private var lastLoadedDate: LocalDate? = null
+
     init {
         loadTodayQuote()
     }
 
+    /**
+     * Re-loads the quote if the date has changed since the last load.
+     * Called when the screen is (re-)displayed, so a day change while
+     * the app process is alive doesn't show a stale quote.
+     */
+    fun refreshIfNewDay() {
+        val today = LocalDate.now()
+        if (today != lastLoadedDate) {
+            loadTodayQuote()
+        }
+    }
+
     private fun loadTodayQuote() {
+        val today = LocalDate.now()
         viewModelScope.launch {
             try {
-                val quote = dailyQuoteSelector.getQuoteForDate(LocalDate.now())
+                val quote = dailyQuoteSelector.getQuoteForDate(today)
                 val isFavorite = favoritesManager.isFavorite(quote.id)
                 _uiState.value = DailyQuoteUiState.Success(quote, isFavorite)
+                lastLoadedDate = today
             } catch (e: Exception) {
                 _uiState.value = DailyQuoteUiState.Error(e.message ?: "Failed to load quote")
             }

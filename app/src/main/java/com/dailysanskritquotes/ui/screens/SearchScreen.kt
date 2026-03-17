@@ -91,7 +91,7 @@ fun SearchScreen(
         when {
             query.isBlank() -> {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -104,7 +104,7 @@ fun SearchScreen(
             }
             searchResults.isEmpty() -> {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -117,6 +117,7 @@ fun SearchScreen(
             }
             else -> {
                 LazyColumn(
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
