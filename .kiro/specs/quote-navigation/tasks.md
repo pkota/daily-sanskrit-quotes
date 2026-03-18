@@ -106,7 +106,7 @@ Add swipe navigation between shown quotes, a hidden "Reveal Next Quote" button, 
     - **Property 7: Search pager navigation stays within bounds**
     - **Validates: Requirements 4.5, 4.6**
 
-- [-] 10. Final checkpoint - Ensure all tests pass
+- [x] 10. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

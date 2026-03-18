@@ -2,6 +2,7 @@ package com.dailysanskritquotes.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,7 +21,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
@@ -41,7 +46,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -60,7 +64,6 @@ fun SearchScreen(
     val allTagNames by viewModel.allTagNames.collectAsState()
     val selectedIndex by viewModel.selectedResultIndex.collectAsState()
     var addTagQuoteId by remember { mutableStateOf<String?>(null) }
-    val context = LocalContext.current
 
     Box(modifier = Modifier.fillMaxSize()) {
         // List view
@@ -183,43 +186,71 @@ private fun SearchResultPager(
     )
     val allTagNames by viewModel.allTagNames.collectAsState()
     var addTagQuoteId by remember { mutableStateOf<String?>(null) }
-    val context = LocalContext.current
 
+    // Full-screen opaque overlay that covers everything including the search bar
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxSize()
-        ) { page ->
-            val quote = results[page]
-            val customTags by viewModel.getTagsForQuote(quote.id).collectAsState(initial = emptyList())
-            val predefinedTags = remember(quote.tags) {
-                try {
-                    Json.decodeFromString<List<String>>(quote.tags)
-                } catch (_: Exception) {
-                    emptyList()
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Top bar with close button
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back to search results"
+                    )
                 }
+                Text(
+                    text = "${pagerState.currentPage + 1} / ${results.size}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                QuoteCardContent(
-                    quote = quote,
-                    shownDate = null,
-                    isFavorite = quote.isFavorite,
-                    customTags = customTags,
-                    predefinedTags = predefinedTags,
-                    onToggleFavorite = { /* TODO: wire up if needed */ },
-                    onShare = { /* TODO: wire up if needed */ },
-                    onAddTag = { addTagQuoteId = quote.id },
-                    onRemoveTag = { tagName -> viewModel.removeTag(quote.id, tagName) }
-                )
+            // Pager takes remaining space
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f)
+            ) { page ->
+                val quote = results[page]
+                val customTags by viewModel.getTagsForQuote(quote.id).collectAsState(initial = emptyList())
+                val predefinedTags = remember(quote.tags) {
+                    try {
+                        Json.decodeFromString<List<String>>(quote.tags)
+                    } catch (_: Exception) {
+                        emptyList()
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    QuoteCardContent(
+                        quote = quote,
+                        shownDate = null,
+                        isFavorite = quote.isFavorite,
+                        customTags = customTags,
+                        predefinedTags = predefinedTags,
+                        onToggleFavorite = { },
+                        onShare = { },
+                        onAddTag = { addTagQuoteId = quote.id },
+                        onRemoveTag = { tagName -> viewModel.removeTag(quote.id, tagName) }
+                    )
+                }
             }
         }
     }
