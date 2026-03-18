@@ -50,6 +50,26 @@ class DailyQuoteSelector(
         repository.resetShownQuotes()
     }
 
+    /**
+     * Selects and marks a new unshown quote as shown with today's date.
+     * Used by the hidden "Reveal Next Quote" button to simulate a new day.
+     * Uses a varied seed so it doesn't collide with the day's existing quote.
+     */
+    suspend fun selectNextUnshownQuote(): QuoteEntity {
+        var candidates = repository.getUnshownQuotes()
+        if (candidates.isEmpty()) {
+            resetCycleIfNeeded()
+            candidates = repository.getAllQuotes()
+        }
+        val today = LocalDate.now()
+        // Vary the seed so repeated reveals on the same day pick different quotes
+        val index = selectQuoteIndex(today.plusDays(candidates.size.toLong()), candidates.size)
+        val sorted = candidates.sortedBy { it.id }
+        val selected = sorted[index]
+        repository.markAsShown(selected.id, today)
+        return selected
+    }
+
     companion object {
         /**
          * Pure deterministic function: given a date and a list size,

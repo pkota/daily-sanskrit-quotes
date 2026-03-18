@@ -1,5 +1,8 @@
 package com.dailysanskritquotes.ui.screens
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,7 +16,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
@@ -36,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -52,88 +58,172 @@ fun SearchScreen(
     val query by viewModel.query.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
     val allTagNames by viewModel.allTagNames.collectAsState()
-    // Track which quote's AddTagDialog is currently showing
+    val selectedIndex by viewModel.selectedResultIndex.collectAsState()
     var addTagQuoteId by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-    ) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = { viewModel.query.value = it },
+    Box(modifier = Modifier.fillMaxSize()) {
+        // List view
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            placeholder = { Text("Search quotes...") },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Filled.Search,
-                    contentDescription = "Search"
-                )
-            },
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = { viewModel.query.value = "" }) {
-                        Icon(
-                            imageVector = Icons.Filled.Clear,
-                            contentDescription = "Clear search"
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { viewModel.query.value = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                placeholder = { Text("Search quotes...") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = "Search"
+                    )
+                },
+                trailingIcon = {
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.query.value = "" }) {
+                            Icon(
+                                imageVector = Icons.Filled.Clear,
+                                contentDescription = "Clear search"
+                            )
+                        }
+                    }
+                },
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            when {
+                query.isBlank() -> {
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Search for quotes in Sanskrit or English",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
-            },
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        when {
-            query.isBlank() -> {
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Search for quotes in Sanskrit or English",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-            searchResults.isEmpty() -> {
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No results found",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-            else -> {
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(vertical = 8.dp)
-                ) {
-                    items(searchResults, key = { it.id }) { quote ->
-                        SearchResultCard(
-                            quote = quote,
-                            viewModel = viewModel,
-                            onAddTagClick = { addTagQuoteId = quote.id }
+                searchResults.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No results found",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
                         )
+                    }
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(vertical = 8.dp)
+                    ) {
+                        itemsIndexed(searchResults, key = { _, quote -> quote.id }) { index, quote ->
+                            SearchResultCard(
+                                quote = quote,
+                                viewModel = viewModel,
+                                onAddTagClick = { addTagQuoteId = quote.id },
+                                onClick = { viewModel.selectResult(index) }
+                            )
+                        }
                     }
                 }
             }
         }
+
+        // Pager overlay
+        if (selectedIndex != null && searchResults.isNotEmpty()) {
+            SearchResultPager(
+                results = searchResults,
+                initialIndex = selectedIndex!!,
+                viewModel = viewModel,
+                onBack = { viewModel.clearSelection() }
+            )
+        }
     }
 
-    // Add Tag Dialog - shown for the selected quote
+    // Add Tag Dialog
+    if (addTagQuoteId != null) {
+        AddTagDialog(
+            onDismiss = { addTagQuoteId = null },
+            onConfirm = { tagName ->
+                viewModel.addTag(addTagQuoteId!!, tagName)
+                addTagQuoteId = null
+            },
+            existingTagNames = allTagNames
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SearchResultPager(
+    results: List<QuoteEntity>,
+    initialIndex: Int,
+    viewModel: SearchViewModel,
+    onBack: () -> Unit
+) {
+    BackHandler(onBack = onBack)
+
+    val pagerState = rememberPagerState(
+        initialPage = initialIndex.coerceIn(0, results.lastIndex),
+        pageCount = { results.size }
+    )
+    val allTagNames by viewModel.allTagNames.collectAsState()
+    var addTagQuoteId by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            val quote = results[page]
+            val customTags by viewModel.getTagsForQuote(quote.id).collectAsState(initial = emptyList())
+            val predefinedTags = remember(quote.tags) {
+                try {
+                    Json.decodeFromString<List<String>>(quote.tags)
+                } catch (_: Exception) {
+                    emptyList()
+                }
+            }
+
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                QuoteCardContent(
+                    quote = quote,
+                    shownDate = null,
+                    isFavorite = quote.isFavorite,
+                    customTags = customTags,
+                    predefinedTags = predefinedTags,
+                    onToggleFavorite = { /* TODO: wire up if needed */ },
+                    onShare = { /* TODO: wire up if needed */ },
+                    onAddTag = { addTagQuoteId = quote.id },
+                    onRemoveTag = { tagName -> viewModel.removeTag(quote.id, tagName) }
+                )
+            }
+        }
+    }
+
     if (addTagQuoteId != null) {
         AddTagDialog(
             onDismiss = { addTagQuoteId = null },
@@ -151,7 +241,8 @@ fun SearchScreen(
 private fun SearchResultCard(
     quote: QuoteEntity,
     viewModel: SearchViewModel,
-    onAddTagClick: () -> Unit
+    onAddTagClick: () -> Unit,
+    onClick: () -> Unit
 ) {
     val customTags by viewModel.getTagsForQuote(quote.id).collectAsState(initial = emptyList())
 
@@ -164,7 +255,9 @@ private fun SearchResultCard(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -182,7 +275,6 @@ private fun SearchResultCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // Transliteration (only show if non-empty)
             if (quote.transliteration.isNotBlank()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -213,7 +305,6 @@ private fun SearchResultCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
 
-            // Tags section
             if (predefinedTags.isNotEmpty() || customTags.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 FlowRow(
@@ -221,7 +312,6 @@ private fun SearchResultCard(
                     horizontalArrangement = Arrangement.Center,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    // Predefined tags
                     predefinedTags.forEach { tag ->
                         AssistChip(
                             onClick = { },
@@ -232,7 +322,6 @@ private fun SearchResultCard(
                             )
                         )
                     }
-                    // Custom tags with close icon
                     customTags.forEach { customTag ->
                         AssistChip(
                             onClick = { viewModel.removeTag(quote.id, customTag.tagName) },
@@ -253,7 +342,6 @@ private fun SearchResultCard(
                 }
             }
 
-            // Add Tag chip
             Spacer(modifier = Modifier.height(8.dp))
             AssistChip(
                 onClick = onAddTagClick,

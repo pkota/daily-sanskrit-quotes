@@ -40,6 +40,12 @@ class QuoteRepository(
         return quoteDao.getById(quoteId)
     }
 
+    suspend fun getShownQuoteHistory(): List<Pair<QuoteEntity, String>> {
+        return shownQuoteDao.getAllShownQuotesSorted().mapNotNull { shown ->
+            quoteDao.getById(shown.quoteId)?.let { quote -> quote to shown.shownDate }
+        }
+    }
+
     fun searchQuotes(query: String): Flow<List<QuoteEntity>> =
         quoteDao.searchQuotes(query)
 

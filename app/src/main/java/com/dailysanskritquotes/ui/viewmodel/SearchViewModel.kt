@@ -29,9 +29,16 @@ class SearchViewModel @Inject constructor(
 
     val query = MutableStateFlow("")
 
+    /** Index of the selected search result for pager view, null = list view. */
+    val selectedResultIndex = MutableStateFlow<Int?>(null)
+
+    fun selectResult(index: Int) { selectedResultIndex.value = index }
+    fun clearSelection() { selectedResultIndex.value = null }
+
     val searchResults: StateFlow<List<QuoteEntity>> = query
         .debounce(300)
         .flatMapLatest { q ->
+            selectedResultIndex.value = null // Close pager when query changes
             if (q.isBlank() || q.trim().length < 3) flowOf(emptyList())
             else searchEngine.search(q)
         }

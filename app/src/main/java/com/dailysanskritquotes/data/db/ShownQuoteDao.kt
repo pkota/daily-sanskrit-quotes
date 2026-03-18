@@ -19,4 +19,7 @@ interface ShownQuoteDao {
 
     @Query("DELETE FROM shown_quotes")
     suspend fun resetAll()
+
+    @Query("SELECT * FROM shown_quotes ORDER BY shownDate ASC")
+    suspend fun getAllShownQuotesSorted(): List<ShownQuoteEntity>
 }

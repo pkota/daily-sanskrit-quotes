@@ -1,53 +1,44 @@
 package com.dailysanskritquotes.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dailysanskritquotes.ui.viewmodel.DailyQuoteUiState
 import com.dailysanskritquotes.ui.viewmodel.DailyQuoteViewModel
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DailyQuoteScreen(
     viewModel: DailyQuoteViewModel = hiltViewModel()
@@ -55,18 +46,18 @@ fun DailyQuoteScreen(
     val uiState by viewModel.uiState.collectAsState()
     val customTags by viewModel.customTags.collectAsState()
     val allTagNames by viewModel.allTagNames.collectAsState()
+    val scrollToEnd by viewModel.scrollToEnd.collectAsState()
     val context = LocalContext.current
     var showAddTagDialog by remember { mutableStateOf(false) }
+    var revealButtonVisible by remember { mutableStateOf(false) }
 
-    // Refresh quote each time the screen is displayed (handles day change while app is alive)
+    // Refresh quote each time the screen is displayed
     LaunchedEffect(Unit) {
         viewModel.refreshIfNewDay()
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         when (val state = uiState) {
@@ -83,140 +74,101 @@ fun DailyQuoteScreen(
                 )
             }
             is DailyQuoteUiState.Success -> {
-                Card(
+                val history = state.quoteHistory
+                val pagerState = rememberPagerState(
+                    initialPage = state.currentPageIndex,
+                    pageCount = { history.size }
+                )
+
+                // Scroll to end when a new quote is revealed
+                LaunchedEffect(scrollToEnd) {
+                    if (scrollToEnd) {
+                        pagerState.animateScrollToPage(history.lastIndex)
+                        viewModel.onScrollToEndConsumed()
+                    }
+                }
+
+                // Sync pager page changes to ViewModel
+                LaunchedEffect(pagerState) {
+                    snapshotFlow { pagerState.currentPage }.collect { page ->
+                        viewModel.onPageChanged(page)
+                    }
+                }
+
+                // Triple-tap detection state
+                var tapCount by remember { mutableIntStateOf(0) }
+
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
+                    HorizontalPager(
+                        state = pagerState,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = state.quote.sanskritText,
-                            style = MaterialTheme.typography.headlineMedium,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        // Transliteration (only show if non-empty)
-                        if (state.quote.transliteration.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = state.quote.transliteration,
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontStyle = FontStyle.Italic,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = state.quote.englishTranslation,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontStyle = FontStyle.Italic,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text(
-                            text = "— ${state.quote.attribution}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
-
-                        // Tags section
-                        val predefinedTags = remember(state.quote.tags) {
+                            .weight(1f)
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onTap = {
+                                        tapCount++
+                                        if (tapCount >= 3) {
+                                            revealButtonVisible = !revealButtonVisible
+                                            tapCount = 0
+                                        }
+                                    }
+                                )
+                            }
+                    ) { page ->
+                        val item = history[page]
+                        val pageTags = remember(item.quote.tags) {
                             try {
-                                Json.decodeFromString<List<String>>(state.quote.tags)
+                                Json.decodeFromString<List<String>>(item.quote.tags)
                             } catch (_: Exception) {
                                 emptyList()
                             }
                         }
 
-                        if (predefinedTags.isNotEmpty() || customTags.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            FlowRow(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                // Predefined tags
-                                predefinedTags.forEach { tag ->
-                                    AssistChip(
-                                        onClick = { },
-                                        label = { Text(tag) },
-                                        modifier = Modifier.padding(horizontal = 4.dp),
-                                        colors = AssistChipDefaults.assistChipColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                        )
-                                    )
-                                }
-                                // Custom tags with close icon
-                                customTags.forEach { customTag ->
-                                    AssistChip(
-                                        onClick = { viewModel.removeTag(customTag.tagName) },
-                                        label = { Text(customTag.tagName) },
-                                        trailingIcon = {
-                                            Icon(
-                                                imageVector = Icons.Filled.Close,
-                                                contentDescription = "Remove tag ${customTag.tagName}",
-                                                modifier = Modifier.size(16.dp)
-                                            )
-                                        },
-                                        modifier = Modifier.padding(horizontal = 4.dp),
-                                        colors = AssistChipDefaults.assistChipColors(
-                                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                                        )
-                                    )
-                                }
-                            }
-                        }
-
-                        // Add Tag chip
-                        Spacer(modifier = Modifier.height(8.dp))
-                        AssistChip(
-                            onClick = { showAddTagDialog = true },
-                            label = { Text("Add Tag") },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Filled.Add,
-                                    contentDescription = "Add tag",
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            IconButton(onClick = { viewModel.toggleFavorite() }) {
-                                Icon(
-                                    imageVector = if (state.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                    contentDescription = if (state.isFavorite) "Remove from favorites" else "Add to favorites",
-                                    tint = if (state.isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            IconButton(onClick = { viewModel.shareQuote(context) }) {
-                                Icon(
-                                    imageVector = Icons.Filled.Share,
-                                    contentDescription = "Share quote",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                            QuoteCardContent(
+                                quote = item.quote,
+                                shownDate = item.shownDate,
+                                isFavorite = if (page == state.currentPageIndex) {
+                                    // Use live favorite state for current page
+                                    item.isFavorite
+                                } else item.isFavorite,
+                                customTags = if (page == state.currentPageIndex) customTags else emptyList(),
+                                predefinedTags = pageTags,
+                                onToggleFavorite = { viewModel.toggleFavorite() },
+                                onShare = { viewModel.shareQuote(context) },
+                                onAddTag = { showAddTagDialog = true },
+                                onRemoveTag = { tagName -> viewModel.removeTag(tagName) }
+                            )
+                        }
+                    }
+
+                    // Reset tap count after timeout
+                    LaunchedEffect(tapCount) {
+                        if (tapCount > 0) {
+                            delay(500)
+                            tapCount = 0
+                        }
+                    }
+
+                    // Hidden reveal button
+                    if (revealButtonVisible) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = { viewModel.revealNextQuote() },
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        ) {
+                            Text("Reveal Next Quote")
                         }
                     }
                 }
