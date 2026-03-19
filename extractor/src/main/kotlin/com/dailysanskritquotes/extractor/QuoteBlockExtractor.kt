@@ -110,7 +110,7 @@ object QuoteBlockExtractor {
      */
     private fun isHarvardKyoto(text: String): Boolean {
         val hkMatches = Regex("[a-z][A-Z]").findAll(text).count()
-        return hkMatches >= 1 || Regex("[।॥]").containsMatchIn(text)
+        return hkMatches >= 3 || Regex("[।॥]").containsMatchIn(text)
     }
 
     /**
@@ -129,8 +129,7 @@ object QuoteBlockExtractor {
                 word.length > 1 && word != "I") {
                 // Check if preceding words had HK patterns
                 val prefix = words.subList(0, i).joinToString(" ")
-                if (Regex("[a-z][A-Z]").containsMatchIn(prefix) ||
-                    prefix.all { it.isLetter() || it.isWhitespace() || it in ".,;:!?()" }) {
+                if (Regex("[a-z][A-Z]").containsMatchIn(prefix)) {
                     return words.subList(i, words.size).joinToString(" ")
                 }
             }

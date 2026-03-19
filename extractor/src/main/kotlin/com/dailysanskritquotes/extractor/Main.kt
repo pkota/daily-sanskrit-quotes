@@ -12,14 +12,16 @@ fun main(args: Array<String>) {
     // Parse arguments
     val inputDir = parseArg(args, "--input")
     val outputFile = parseArg(args, "--output")
+    val existingFile = parseArg(args, "--existing")
 
     if (inputDir == null || outputFile == null) {
-        System.err.println("Usage: extractor --input <directory> --output <file>")
+        System.err.println("Usage: extractor --input <directory> --output <file> [--existing <file>]")
         exitProcess(1)
     }
 
     val inputPath = Paths.get(inputDir)
     val outputPath = Paths.get(outputFile)
+    val existingPath = existingFile?.let { Paths.get(it) }
 
     // Validate input directory
     if (!inputPath.exists() || !inputPath.isDirectory()) {
@@ -64,8 +66,14 @@ fun main(args: Array<String>) {
         System.err.println("INFO: $logEntry")
     }
 
+    // Validate existing file if provided
+    if (existingPath != null && !existingPath.exists()) {
+        System.err.println("ERROR: Existing quotes file not found: $existingFile")
+        exitProcess(1)
+    }
+
     // Step 5: Assign IDs (also generates IAST transliteration and tags)
-    val quoteDtos = IdAssigner.assignIds(deduplicationResult.uniqueQuotes)
+    val quoteDtos = IdAssigner.assignIds(deduplicationResult.uniqueQuotes, existingPath)
 
     // Step 6: Write JSON
     JsonWriter.write(quoteDtos, outputPath)
